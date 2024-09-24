@@ -17,6 +17,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024 * 1024
 
 
 def get_db_connection():
@@ -72,7 +73,6 @@ def login():
         return jsonify({'message': 'Login successful'}), 200
     else:
         return jsonify({'error': 'Invalid email or password'}), 401
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
