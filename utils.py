@@ -1,6 +1,6 @@
 import pandas as pd
 import google.generativeai as genai
-import joblib
+
 genai.configure(api_key='AIzaSyBwIszYIXYkhpNO2cRqQ_LNtQjU9MW3V7c')
 def load_data(file_path, sheet_name):
     data = pd.read_excel(file_path, sheet_name=sheet_name, skiprows=4)
