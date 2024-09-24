@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from pyngrok import ngrok
 import pandas as pd
 import joblib 
 from utils import load_data, cleaning_data, generate_report, results,respones
@@ -15,9 +14,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}) 
 port_no = 5000
 # Ensure your ngrok auth token is correct
-ngrok.set_auth_token("2krmqKZu0EWIJESiqrVWagkvy9i_hnPfzwngRQuoCB6F2q1C")
-public_url = ngrok.connect(port_no)
-print(f"ngrok tunnel URL: {public_url}")  # Print the ngrok URL for debugging
+
 
 
 UPLOAD_FOLDER = './uploads'
