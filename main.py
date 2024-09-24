@@ -12,9 +12,6 @@ import os
 app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": "*"}}) 
-port_no = 5000
-# Ensure your ngrok auth token is correct
-
 
 
 UPLOAD_FOLDER = './uploads'
@@ -146,4 +143,4 @@ def generate_report_endpoint():
    
 
 if __name__ == '__main__':
-    app.run(port=port_no)
+    app.run()
