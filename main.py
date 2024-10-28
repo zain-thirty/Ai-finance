@@ -138,7 +138,6 @@ def generate_report_endpoint():
         month = data.get('month')
         year1 = data.get('year1')
         month1 = data.get('month1')
-        product_lines =  ['Product Line A', 'Product Line B', 'Product Line C', 'Product Line E', 'Product Line F', 'Product Line G']
 
         df = load_data(file_path)
         df = df.sort_values(by=["Year", "Month", "Product line"])
