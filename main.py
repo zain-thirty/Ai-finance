@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import pandas as pd
-
-from utils import load_data, cleaning_data, generate_report, results,respones
+import joblib 
+from utils import load_data, process_service_data, generate_report, results,respones
 from flask_cors import CORS
 import os
 from werkzeug.utils import secure_filename
@@ -9,6 +9,7 @@ import sqlite3
 import bcrypt
 from email.utils import parseaddr
 import os
+import time
 app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": "*"}}) 
@@ -21,7 +22,7 @@ app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024 * 1024
 
 
 def get_db_connection():
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect('users.db', check_same_thread=False,timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -34,26 +35,49 @@ def signup():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    email = data.get('email')  # New field
+    confirm_password = data.get('confirm_password')  # Confirm password field
+    email = data.get('email')
 
-    if not username or not password or not email:
-        return jsonify({'error': 'Username, password, and email are required'}), 400
+    # Check if all required fields are provided
+    if not username or not password or not email or not confirm_password:
+        return jsonify({'error': 'Username, password, email, and confirm password are required'}), 400
 
+    # Check if passwords match
+    if password != confirm_password:
+        return jsonify({'error': 'Passwords do not match'}), 400
+
+    # Check for a valid email
     if not is_valid_email(email):
         return jsonify({'error': 'Invalid email address'}), 400
-
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Check if the email already exists in the database
+        user_by_email = cursor.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+        if user_by_email:
+            return jsonify({'error': 'Email already exists'}), 400
+
+        # Check if the username already exists in the database
+        user_by_username = cursor.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+        if user_by_username:
+            return jsonify({'error': 'Username already exists'}), 400
+
+        # Hash the password only after ensuring passwords match
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        # Insert new user
         cursor.execute('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', 
                        (username, hashed_password, email))
         conn.commit()
         conn.close()
         return jsonify({'message': 'User created successfully'}), 201
+
     except sqlite3.IntegrityError:
-        return jsonify({'error': 'Username already exists'}), 400
+        return jsonify({'error': 'Database integrity error occurred'}), 400
+    except sqlite3.OperationalError as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -89,6 +113,19 @@ def upload_file():
         file.save(file_path)
         return jsonify({'file_path': file_path}), 200
     
+@app.route('/users', methods=['GET'])
+def get_all_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Fetch all users with their approval status
+    users = cursor.execute('SELECT id, username, email, approved FROM users').fetchall()
+    conn.close()
+
+    # Convert the result to a list of dictionaries
+    users_list = [dict(user) for user in users]
+    
+    return jsonify(users_list), 200
 
 @app.route('/generate-report', methods=['POST'])
 def generate_report_endpoint():
@@ -97,17 +134,23 @@ def generate_report_endpoint():
             return jsonify({'error': 'Content-Type must be application/json'}), 415
         data = request.json
         file_path = data.get('file_path')
-        sheet_name = data.get('sheet_name', 'Input Sheet (Monthly)')
         year = data.get('year')
         month = data.get('month')
         year1 = data.get('year1')
         month1 = data.get('month1')
         product_lines =  ['Product Line A', 'Product Line B', 'Product Line C', 'Product Line E', 'Product Line F', 'Product Line G']
 
-        df = load_data(file_path, sheet_name)
-        full_df = cleaning_data(df)
-        report_df = generate_report(year, month, year1, month1, product_lines, full_df)
-        final_data = results(report_df)
+        df = load_data(file_path)
+        df = df.sort_values(by=["Year", "Month", "Product line"])
+        df = df.set_index(["Year", "Month", "Product line"])
+
+        final_dataframe1 = process_service_data(df, year, month)
+        final_dataframe2 = process_service_data(df, year1, month1)
+        product_lines = pd.concat([final_dataframe1, final_dataframe2])['Product'].unique()
+
+    # Step 3: Generate the report
+        report = generate_report(year, month, year1, month1, product_lines, final_dataframe1, final_dataframe2)
+        final_data = results(report)
         prompt = f"""
         You are an expert tasked with analyzing the category data: {final_data["Category"]}. The data consists of two columns: {final_data['Margin Price Effect']} and {final_data['Margin Growth Rate']}. Your job is to review the values in these columns and provide reasoning for why each category appears in the dataset.
         Use the following format for each category:
@@ -143,4 +186,4 @@ def generate_report_endpoint():
    
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0.', port=5000)
