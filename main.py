@@ -79,6 +79,24 @@ def signup():
     except sqlite3.OperationalError as e:
         return jsonify({'error': f'Database error: {str(e)}'}), 500
 
+@app.route('/approve-user', methods=['POST'])
+def approve_user():
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    if not user_id:
+        return jsonify({'error': 'User ID is required'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Update the user's approved status
+    cursor.execute('UPDATE users SET approved = ? WHERE id = ?', ('approved', user_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'User approved successfully'}), 200
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -86,17 +104,24 @@ def login():
     password = data.get('password')
 
     if not email or not password:
-        return jsonify({'error': 'email and password are required'}), 400
+        return jsonify({'error': 'Email and password are required'}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    # Retrieve user by email
     user = cursor.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
     conn.close()
 
+    # Check if user exists and password matches
     if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
+        # Check if the user is approved
+        if user['approved'] != 'approved':
+            return jsonify({'error': 'Account not approved by admin'}), 403
         return jsonify({'message': 'Login successful'}), 200
     else:
         return jsonify({'error': 'Invalid email or password'}), 401
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
