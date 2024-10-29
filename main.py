@@ -176,23 +176,30 @@ def generate_report_endpoint():
         report = generate_report(year, month, year1, month1, product_lines, final_dataframe1, final_dataframe2)
         final_data = results(report)
         prompt = f"""
-        You are an expert tasked with analyzing the category data: {final_data["Category"]}. The data consists of two columns: {final_data['Margin Price Effect']} and {final_data['Margin Growth Rate']}. Your job is to review the values in these columns and provide reasoning for why each category appears in the dataset.
-        Use the following format for each category:
-        Product:{final_data["Product Line"]}
-        Type:{final_data["Type"]}
-        Category: [Category Name]
-        Reasoning: [Provide a more explanation for why this category is represented based on the data.]
-        Product: Product A
-        Type:WO
-        Category: [Category Name]
-        Reasoning: [Provide a more explanation for why this category is represented based on the data.]
-        other..
-        Avoid giving any extra information.
+        You are an expert data analyst tasked with analyzing category data for various products in the dataset. The dataset consists of the following:
+        
+        - **Product Names**: {final_data['Product Line'].unique().tolist()} (this lists the different product lines)
+        - **Types**: {final_data['Type'].unique().tolist()} (this lists the types of products, including 'SKU' and 'WO')
+        - **Margin Price Effect**: {final_data['Margin Price Effect']}
+        - **Margin Growth Rate**: {final_data['Margin Growth Rate']}
+        
+        Using this information, please provide your analysis for each product category, considering both 'SKU' and 'WO' types, using the following format:
+        
+        - **Product Name**: [Product Name] (specific name from the dataset)
+        - **Type**: [SKU or WO] (specific type from the dataset)
+        - **Category**: [Category Name] (derived from your analysis)
+        - **Reason**: [Provide a detailed analysis explaining why this category is represented based on the Margin Price Effect and Margin Growth Rate data.]
+        
+        Make sure to provide one distinct entry for each product category for both 'SKU' and 'WO'. Avoid giving any extra information outside of this format.
         """
         result = respones(prompt)
-        prompt1=f""" You are an expert to give the suggestion of the {result}, You give suggestion which strategy and method use to improve the performance, If the result is good then you show all okay.
+        prompt1 = f"""
+        You are a strategic consultant providing suggestions based on the analysis results: {result}. 
+
+        Please evaluate the findings and suggest specific strategies or methods that can be employed to improve the performance of the products in this dataset. 
+
+        If the analysis indicates satisfactory results, simply respond with "All okay." 
         """
-        result1 = respones(prompt1)
         # Return JSON response
         # return final_data.to_json(orient='records')
         response_data = {
