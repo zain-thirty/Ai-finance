@@ -1,20 +1,15 @@
 import pandas as pd
 import google.generativeai as genai
-<<<<<<< HEAD
+
 import joblib
-genai.configure(api_key='AIzaSyBwIszYIXYkhpNO2cRqQ_LNtQjU9MW3V7c')
-def load_data(file_path):
-    data = pd.read_excel(file_path)
-    return data
 
-=======
 
 genai.configure(api_key='AIzaSyBwIszYIXYkhpNO2cRqQ_LNtQjU9MW3V7c')
 def load_data(file_path):
     data = pd.read_excel(file_path)
     return data
 
->>>>>>> c2c588c28adcd4c7d3d2340d1faec53592fc79c4
+
 def process_service_data(df, year, month):
     # Initialize the final DataFrame
     final_df = pd.DataFrame(columns=df.columns[1:])
