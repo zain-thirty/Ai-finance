@@ -6,19 +6,21 @@ def create_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
 
-    # Create a table for user credentials, including the new email field
+    # Create a table for user credentials, including the email and approved status fields
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            email TEXT NOT NULL
+            email TEXT UNIQUE NOT NULL,
+            approved TEXT DEFAULT 'not approved'  -- New column with default value
         )
     ''')
     
     # Commit and close the connection
     conn.commit()
     conn.close()
+
 def add_user(username, password, email):
     # Connect to SQLite database
     conn = sqlite3.connect('users.db')
@@ -28,10 +30,10 @@ def add_user(username, password, email):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     try:
-        # Insert user into the table
+        # Insert user into the table with default 'not approved' status
         cursor.execute('''
-            INSERT INTO users (username, password, email)
-            VALUES (?, ?, ?)
+            INSERT INTO users (username, password, email, approved)
+            VALUES (?, ?, ?, 'not approved')
         ''', (username, hashed_password, email))
 
         # Commit the transaction
