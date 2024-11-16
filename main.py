@@ -78,6 +78,10 @@ def signup():
         return jsonify({'error': 'Database integrity error occurred'}), 400
     except sqlite3.OperationalError as e:
         return jsonify({'error': f'Database error: {str(e)}'}), 500
+<<<<<<< HEAD
+=======
+
+>>>>>>> c2c588c28adcd4c7d3d2340d1faec53592fc79c4
 @app.route('/approve-user', methods=['POST'])
 def approve_user():
     data = request.get_json()
@@ -174,6 +178,7 @@ def generate_report_endpoint():
     # Step 3: Generate the report
         report = generate_report(year, month, year1, month1, product_lines, final_dataframe1, final_dataframe2)
         final_data = results(report)
+<<<<<<< HEAD
         analysis = f"""
 You are an expert data analyst tasked with analyzing category data for various products in the dataset. The dataset includes the following attributes:
 
@@ -201,6 +206,26 @@ For each product category, generate one distinct entry for both 'SKU' and 'WO' t
 """
 
         result = respones(analysis)
+=======
+        prompt = f"""
+        You are an expert data analyst tasked with analyzing category data for various products in the dataset. The dataset consists of the following:
+        
+        - **Product Names**: {final_data['Product Line'].unique().tolist()} (this lists the different product lines)
+        - **Types**: {final_data['Type'].unique().tolist()} (this lists the types of products, including 'SKU' and 'WO')
+        - **Margin Price Effect**: {final_data['Margin Price Effect']}
+        - **Margin Growth Rate**: {final_data['Margin Growth Rate']}
+        
+        Using this information, please provide your analysis for each product category, considering both 'SKU' and 'WO' types, using the following format:
+        
+        - **Product Name**: [Product Name] (specific name from the dataset)
+        - **Type**: [SKU or WO] (specific type from the dataset)
+        - **Category**: [Category Name] (derived from your analysis)
+        - **Reason**: [Provide a detailed analysis explaining why this category is represented based on the Margin Price Effect and Margin Growth Rate data.]
+        
+        Make sure to provide one distinct entry for each product category for both 'SKU' and 'WO'. Avoid giving any extra information outside of this format.
+        """
+        result = respones(prompt)
+>>>>>>> c2c588c28adcd4c7d3d2340d1faec53592fc79c4
         prompt1 = f"""
         You are a strategic consultant providing suggestions based on the analysis results: {result}. 
 
@@ -208,7 +233,6 @@ For each product category, generate one distinct entry for both 'SKU' and 'WO' t
 
         If the analysis indicates satisfactory results, simply respond with "All okay." 
         """
-        result1 = respones(prompt1)
         # Return JSON response
         response_data = {
             'final_data': final_data.to_dict(orient='records'),  # Convert DataFrame to dict for JSON compatibility
@@ -225,4 +249,4 @@ For each product category, generate one distinct entry for both 'SKU' and 'WO' t
    
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0.', port=5000,ssl_context='adhoc')

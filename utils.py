@@ -1,11 +1,20 @@
 import pandas as pd
 import google.generativeai as genai
+<<<<<<< HEAD
 import joblib
 genai.configure(api_key='AIzaSyBwIszYIXYkhpNO2cRqQ_LNtQjU9MW3V7c')
 def load_data(file_path):
     data = pd.read_excel(file_path)
     return data
 
+=======
+
+genai.configure(api_key='AIzaSyBwIszYIXYkhpNO2cRqQ_LNtQjU9MW3V7c')
+def load_data(file_path):
+    data = pd.read_excel(file_path)
+    return data
+
+>>>>>>> c2c588c28adcd4c7d3d2340d1faec53592fc79c4
 def process_service_data(df, year, month):
     # Initialize the final DataFrame
     final_df = pd.DataFrame(columns=df.columns[1:])
@@ -102,6 +111,11 @@ def generate_report(year, month, year1, month1, product_lines,final_dataframe1, 
         "Revenue Growth Rate ", "Revenue Price Effect (%)", "Revenue Volume Effect (%)",
         "Revenue Mix Effect (%)", "KPI total ","Margin Growth Rate","Margin Price Effect (%)",
         "Margin Volume Effect (%)","Margin Mix Effect (%)","KPI total"
+
+
+
+
+
     ]
 
     report_data = []

@@ -20,6 +20,7 @@ def create_db():
     # Commit and close the connection
     conn.commit()
     conn.close()
+<<<<<<< HEAD
 
 def add_user(username, password, email):
     # Connect to SQLite database
@@ -46,7 +47,9 @@ def add_user(username, password, email):
     finally:
         # Close the connection
         conn.close()
+=======
+>>>>>>> c2c588c28adcd4c7d3d2340d1faec53592fc79c4
 
 if __name__ == '__main__':
     create_db()
-    add_user("abc", "123", "123@gmail.com")
+
