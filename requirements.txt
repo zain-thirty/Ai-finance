@@ -5,6 +5,4 @@ openpyxl
 bcrypt
 flask_cors
 pandas
-jsonify
-matplotlib 
-plotly
+
