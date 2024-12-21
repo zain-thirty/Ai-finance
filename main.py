@@ -150,7 +150,48 @@ def get_all_users():
     users_list = [dict(user) for user in users]
     
     return jsonify(users_list), 200
+@app.route('/delete-user', methods=['DELETE'])
+def delete_user():
+    data = request.get_json()
+    user_id = data.get('user_id')
 
+    if not user_id:
+        return jsonify({'error': 'User ID is required'}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if the user exists
+        user = cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Delete the user with the specified ID
+        cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': f'User with ID {user_id} deleted successfully'}), 200
+    except sqlite3.OperationalError as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+@app.route('/unapprove-user', methods=['POST'])
+def unapprove_user():
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    if not user_id:
+        return jsonify({'error': 'User ID is required'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Update the user's approved status to `not approved`
+    cursor.execute('UPDATE users SET approved = ? WHERE id = ?', ('not approved', user_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'User unapproved successfully'}), 200
 @app.route('/generate-report', methods=['POST'])
 def generate_report_endpoint():
     try:
@@ -229,4 +270,4 @@ For each product category, generate one distinct entry for both 'SKU' and 'WO' t
    
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0.', port=5000,ssl_context='adhoc')
+    app.run(host='0.0.0.0.', port=5000)
